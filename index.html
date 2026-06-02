@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Joshua Plan">
+<meta name="theme-color" content="#0a0a0a">
+<title>Joshua Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1c1c1c; --border: #272727;
+  --text: #f0ede8; --muted: #666; --accent: #f59e0b; --accent2: #ef4444;
+  --green: #22c55e; --blue: #3b82f6; --purple: #a855f7;
+  --c-memora: #f59e0b; --c-portrait: #3b82f6; --c-contenu: #a855f7;
+  --c-perso: #22c55e; --c-gym: #ef4444; --c-travail: #6b7280;
+  --safe-top: env(safe-area-inset-top, 0px); --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100dvh; overflow-x: hidden; padding-top: var(--safe-top); padding-bottom: var(--safe-bot); }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 50; }
+.app-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: .08em; color: var(--accent); }
+.app-logo span { color: var(--text); }
+.header-date { font-size: 12px; color: var(--muted); text-align: right; }
+.tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab-btn { flex-shrink: 0; padding: 12px 20px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.view { display: none; padding: 20px; }
+.view.active { display: block; }
+.week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.week-label { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .05em; color: var(--text); }
+.week-arrow { background: var(--surface); border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px; border-radius: 10px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.week-arrow:active { background: var(--accent); color: #000; }
+.days-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 20px; }
+.day-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 8px 4px; text-align: center; cursor: pointer; transition: all .15s; }
+.day-pill.active { background: var(--accent); border-color: var(--accent); }
+.day-pill.active .day-name, .day-pill.active .day-num { color: #000; }
+.day-pill.today { border-color: var(--accent); }
+.day-name { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.day-pill.active .day-name { color: #000; }
+.day-num { font-size: 16px; font-weight: 600; margin-top: 2px; }
+.day-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); margin: 3px auto 0; opacity: 0; }
+.day-pill.has-blocks .day-dot { opacity: 1; }
+.day-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: .06em; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.day-title .note-count { background: var(--surface2); font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; color: var(--muted); padding: 2px 8px; border-radius: 20px; }
+.timeline { position: relative; }
+.time-slot { display: grid; grid-template-columns: 44px 1fr; gap: 10px; min-height: 50px; }
+.time-slot + .time-slot { margin-top: 4px; }
+.time-label { font-size: 11px; color: var(--muted); padding-top: 4px; text-align: right; font-weight: 500; }
+.slot-content { border-left: 1px solid var(--border); padding: 0 0 4px 12px; min-height: 50px; position: relative; }
+.slot-content::before { content: ''; position: absolute; left: -4px; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--border); }
+.block-item { border-radius: 10px; padding: 10px 12px; margin-bottom: 4px; position: relative; cursor: pointer; transition: opacity .15s; border-left: 3px solid; }
+.block-item:active { opacity: .75; }
+.block-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.block-meta { font-size: 11px; opacity: .7; }
+.block-note { font-size: 11px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); opacity: .8; font-style: italic; }
+.empty-slot { color: var(--muted); font-size: 12px; padding: 8px 0; cursor: pointer; border-radius: 8px; transition: color .15s; }
+.empty-slot:active { color: var(--accent); }
+.fab { position: fixed; bottom: calc(20px + var(--safe-bot)); right: 20px; width: 56px; height: 56px; background: var(--accent); color: #000; border: none; border-radius: 18px; font-size: 26px; cursor: pointer; box-shadow: 0 8px 24px rgba(245,158,11,0.4); display: flex; align-items: center; justify-content: center; z-index: 40; transition: transform .15s; }
+.fab:active { transform: scale(.92); }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 20px calc(24px + var(--safe-bot)); width: 100%; max-height: 90dvh; overflow-y: auto; animation: slideUp .25s ease; }
+@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: .06em; margin-bottom: 20px; color: var(--accent); }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; display: block; }
+.form-input, .form-select, .form-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color .15s; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: none; height: 80px; }
+.project-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.project-chip { padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 2px solid transparent; cursor: pointer; transition: all .15s; opacity: .5; }
+.project-chip.selected { opacity: 1; }
+.time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-primary { width: 100%; background: var(--accent); color: #000; border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+.btn-secondary { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 14px; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 8px; }
+.note-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; position: relative; }
+.note-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.note-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.note-card-project { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.note-card-date { font-size: 11px; color: var(--muted); margin-left: auto; }
+.note-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.note-card-text { font-size: 13px; color: #aaa; line-height: 1.6; }
+.note-delete { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; }
+.project-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
+.project-color-bar { width: 4px; border-radius: 2px; align-self: stretch; }
+.project-stat-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.project-stat-hours { font-size: 12px; color: var(--muted); }
+.project-stat-count { margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: .04em; color: var(--accent); }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+.stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: .04em; color: var(--accent); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+.section-header { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+.note-modal-block { background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; border-left: 3px solid var(--accent); }
+.note-modal-block-name { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.note-modal-block-time { font-size: 11px; color: var(--muted); }
+::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="app-logo">JOSHUA <span>PLAN</span></div>
+  <div class="header-date" id="headerDate"></div>
+</header>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('semaine',event)">📅 Semaine</button>
+  <button class="tab-btn" onclick="switchTab('notes',event)">📝 Journal</button>
+  <button class="tab-btn" onclick="switchTab('projets',event)">🚀 Projets</button>
+</div>
+<div id="view-semaine" class="view active">
+  <div class="week-nav">
+    <button class="week-arrow" onclick="changeWeek(-1)">‹</button>
+    <div class="week-label" id="weekLabel">—</div>
+    <button class="week-arrow" onclick="changeWeek(1)">›</button>
+  </div>
+  <div class="days-row" id="daysRow"></div>
+  <div class="day-title" id="dayTitle"></div>
+  <div class="timeline" id="timeline"></div>
+</div>
+<div id="view-notes" class="view">
+  <p class="section-header">Journal de bord</p>
+  <div id="notesContainer"></div>
+  <div id="emptyNotes" style="text-align:center;padding:40px 0;color:var(--muted);font-size:14px;display:none;">Aucune note.<br>Ajoute des blocs avec des notes !</div>
+</div>
+<div id="view-projets" class="view">
+  <p class="section-header">Cette semaine</p>
+  <div class="stats-grid" id="statsGrid"></div>
+  <p class="section-header">Blocs par projet</p>
+  <div id="projectStats"></div>
+</div>
+<div class="modal-overlay" id="addModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouveau Bloc</div>
+    <div class="form-group"><label class="form-label">Projet</label><div class="project-chips" id="projectChips"></div></div>
+    <div class="form-group"><label class="form-label">Titre</label><input class="form-input" id="blockTitle" placeholder="ex. Cold calls Memora..."/></div>
+    <div class="form-group"><div class="time-row"><div><label class="form-label">Début</label><input class="form-input" id="blockStart" type="time" value="18:00"/></div><div><label class="form-label">Fin</label><input class="form-input" id="blockEnd" type="time" value="20:00"/></div></div></div>
+    <div class="form-group"><label class="form-label">Note (optionnel)</label><textarea class="form-textarea" id="blockNote" placeholder="Qu'est-ce que tu veux accomplir ?"></textarea></div>
+    <button class="btn-primary" onclick="saveBlock()">Ajouter ✓</button>
+    <button class="btn-secondary" onclick="closeAddModal()">Annuler</button>
+  </div>
+</div>
+<div class="modal-overlay" id="noteModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Modifier le bloc</div>
+    <div id="noteModalBlock"></div>
+    <div class="form-group"><label class="form-label">Note / Journal</label><textarea class="form-textarea" id="editBlockNote" placeholder="Qu'est-ce que tu as accompli ?" style="height:120px;"></textarea></div>
+    <div class="form-group"><label class="form-label">Titre</label><input class="form-input" id="editBlockTitle"/></div>
+    <button class="btn-primary" onclick="saveEditBlock()">Sauvegarder ✓</button>
+    <button class="btn-secondary" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#ef4444;" onclick="deleteCurrentBlock()">Supprimer ce bloc</button>
+    <button class="btn-secondary" onclick="exportToAppleCalendar()">📅 Exporter → Calendrier Apple</button>
+    <button class="btn-secondary" onclick="closeNoteModal()">Fermer</button>
+  </div>
+</div>
+<button class="fab" onclick="openAddModal()">+</button>
+<script>
+const PROJECTS=[{id:'memora',name:'Memora Créatif',color:'#f59e0b',emoji:'🎨'},{id:'portrait',name:'Portrait Marsou',color:'#3b82f6',emoji:'📷'},{id:'contenu',name:'Création Contenu',color:'#a855f7',emoji:'🎬'},{id:'gym',name:'Gym',color:'#ef4444',emoji:'💪'},{id:'perso',name:'Personnel',color:'#22c55e',emoji:'🌱'},{id:'travail',name:'Travail',color:'#6b7280',emoji:'💼'}];
+let blocks=JSON.parse(localStorage.getItem('jplan_blocks')||'[]');
+let currentWeekOffset=0,selectedDay=null,selectedProject='memora',editingBlockId=null;
+function saveData(){localStorage.setItem('jplan_blocks',JSON.stringify(blocks));}
+function getWeekStart(offset=0){const d=new Date();const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);d.setDate(diff+offset*7);d.setHours(0,0,0,0);return d;}
+function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function formatWeekLabel(start){const end=new Date(start);end.setDate(end.getDate()+6);const months=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];return `${start.getDate()} ${months[start.getMonth()]} – ${end.getDate()} ${months[end.getMonth()]}`;}
+const DAY_NAMES=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const DAY_FULL=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+function changeWeek(dir){currentWeekOffset+=dir;selectedDay=null;renderWeek();}
+function renderWeek(){
+  const ws=getWeekStart(currentWeekOffset);
+  document.getElementById('weekLabel').textContent=formatWeekLabel(ws);
+  const today=dateKey(new Date());
+  const row=document.getElementById('daysRow');row.innerHTML='';
+  for(let i=0;i<7;i++){
+    const d=new Date(ws);d.setDate(d.getDate()+i);
+    const key=dateKey(d);
+    const hasBlocks=blocks.some(b=>b.date===key);
+    const isToday=key===today;
+    const isSelected=selectedDay===key;
+    const pill=document.createElement('div');
+    pill.className=`day-pill${isToday?' today':''}${isSelected?' active':''}${hasBlocks?' has-blocks':''}`;
+    pill.innerHTML=`<div class="day-name">${DAY_NAMES[i]}</div><div class="day-num">${d.getDate()}</div><div class="day-dot"></div>`;
+    pill.onclick=()=>{selectedDay=key;renderWeek();renderDay();};
+    row.appendChild(pill);
+  }
+  if(!selectedDay){
+    const todayInWeek=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return dateKey(d);});
+    selectedDay=todayInWeek.includes(today)?today:dateKey(ws);
+    renderWeek();return;
+  }
+  renderDay();
+}
+function renderDay(){
+  if(!selectedDay)return;
+  const[y,m,d]=selectedDay.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  const dayIdx=(dt.getDay()+6)%7;
+  const dayBlocks=blocks.filter(b=>b.date===selectedDay).sort((a,b)=>a.start.localeCompare(b.start));
+  document.getElementById('dayTitle').innerHTML=`${DAY_FULL[dayIdx]} ${d} <span class="note-count">${dayBlocks.length} bloc${dayBlocks.length!==1?'s':''}</span>`;
+  const timeline=document.getElementById('timeline');timeline.innerHTML='';
+  const HOURS=['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+  HOURS.forEach(hour=>{
+    const hourBlocks=dayBlocks.filter(b=>b.start>=hour&&b.start<nextHour(hour));
+    const slot=document.createElement('div');slot.className='time-slot';
+    const label=document.createElement('div');label.className='time-label';label.textContent=hour;
+    const content=document.createElement('div');content.className='slot-content';
+    if(hourBlocks.length>0){
+      hourBlocks.forEach(b=>{
+        const proj=PROJECTS.find(p=>p.id===b.project)||PROJECTS[0];
+        const item=document.createElement('div');item.className='block-item';
+        item.style.background=proj.color+'18';item.style.borderLeftColor=proj.color;
+        item.innerHTML=`<div class="block-title">${proj.emoji} ${b.title}</div><div class="block-meta">${b.start} – ${b.end} · ${proj.name}</div>${b.note?`<div class="block-note">${b.note}</div>`:''}`;
+        item.onclick=()=>openNoteModal(b.id);content.appendChild(item);
+      });
+    } else {
+      const empty=document.createElement('div');empty.className='empty-slot';empty.textContent='+ Ajouter';
+      empty.onclick=()=>{document.getElementById('blockStart').value=hour;openAddModal();};
+      content.appendChild(empty);
+    }
+    slot.appendChild(label);slot.appendChild(content);timeline.appendChild(slot);
+  });
+  updateProjectStats();
+}
+function nextHour(h){const[hh,mm]=h.split(':').map(Number);return `${String(hh+1).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;}
+function buildProjectChips(){
+  const container=document.getElementById('projectChips');container.innerHTML='';
+  PROJECTS.forEach(p=>{
+    const chip=document.createElement('div');
+    chip.className=`project-chip${p.id===selectedProject?' selected':''}`;
+    chip.style.background=p.color+'20';chip.style.borderColor=p.id===selectedProject?p.color:'transparent';chip.style.color=p.color;
+    chip.textContent=p.emoji+' '+p.name;chip.onclick=()=>{selectedProject=p.id;buildProjectChips();};
+    container.appendChild(chip);
+  });
+}
+function openAddModal(){buildProjectChips();document.getElementById('blockTitle').value='';document.getElementById('blockNote').value='';document.getElementById('addModal').classList.add('open');}
+function closeAddModal(){document.getElementById('addModal').classList.remove('open');}
+function saveBlock(){
+  const title=document.getElementById('blockTitle').value.trim();
+  const start=document.getElementById('blockStart').value;
+  const end=document.getElementById('blockEnd').value;
+  const note=document.getElementById('blockNote').value.trim();
+  if(!title||!start||!end){alert('Remplis le titre et les heures !');return;}
+  blocks.push({id:Date.now().toString(),date:selectedDay||dateKey(new Date()),project:selectedProject,title,start,end,note,created:new Date().toISOString()});
+  saveData();closeAddModal();renderWeek();renderNotes();
+}
+function openNoteModal(blockId){
+  editingBlockId=blockId;const b=blocks.find(x=>x.id===blockId);if(!b)return;
+  const proj=PROJECTS.find(p=>p.id===b.project)||PROJECTS[0];
+  document.getElementById('noteModalBlock').innerHTML=`<div class="note-modal-block" style="border-left-color:${proj.color}"><div class="note-modal-block-name" style="color:${proj.color}">${proj.emoji} ${proj.name}</div><div class="note-modal-block-time">${b.start} – ${b.end}</div></div>`;
+  document.getElementById('editBlockNote').value=b.note||'';document.getElementById('editBlockTitle').value=b.title||'';
+  document.getElementById('noteModal').classList.add('open');
+}
+function closeNoteModal(){document.getElementById('noteModal').classList.remove('open');}
+function saveEditBlock(){
+  const b=blocks.find(x=>x.id===editingBlockId);if(!b)return;
+  b.note=document.getElementById('editBlockNote').value.trim();b.title=document.getElementById('editBlockTitle').value.trim()||b.title;
+  saveData();closeNoteModal();renderDay();renderNotes();
+}
+function deleteCurrentBlock(){
+  if(!confirm('Supprimer ce bloc ?'))return;
+  blocks=blocks.filter(x=>x.id!==editingBlockId);saveData();closeNoteModal();renderWeek();renderNotes();
+}
+function exportToAppleCalendar(){
+  const b=blocks.find(x=>x.id===editingBlockId);if(!b)return;
+  const proj=PROJECTS.find(p=>p.id===b.project)||PROJECTS[0];
+  const[y,m,d]=b.date.split('-').map(Number);const[sh,sm]=b.start.split(':').map(Number);const[eh,em]=b.end.split(':').map(Number);
+  const fmt=(y,mo,d,h,min)=>`${y}${String(mo).padStart(2,'0')}${String(d).padStart(2,'0')}T${String(h).padStart(2,'0')}${String(min).padStart(2,'0')}00`;
+  const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${proj.emoji} ${b.title}\nDTSTART:${fmt(y,m,d,sh,sm)}\nDTEND:${fmt(y,m,d,eh,em)}\nDESCRIPTION:${b.note||''}\nEND:VEVENT\nEND:VCALENDAR`;
+  const blob=new Blob([ics],{type:'text/calendar'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`${b.title.replace(/ /g,'_')}.ics`;a.click();URL.revokeObjectURL(url);
+}
+function closeModal(e){if(e.target===e.currentTarget){closeAddModal();closeNoteModal();}}
+function renderNotes(){
+  const container=document.getElementById('notesContainer');const empty=document.getElementById('emptyNotes');
+  const notedBlocks=[...blocks].filter(b=>b.note).reverse();
+  if(notedBlocks.length===0){container.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  container.innerHTML=notedBlocks.map(b=>{
+    const proj=PROJECTS.find(p=>p.id===b.project)||PROJECTS[0];const[y,mo,d]=b.date.split('-');
+    return `<div class="note-card"><button class="note-delete" onclick="deleteNoteFromJournal('${b.id}')">✕</button><div class="note-card-top"><div class="note-dot" style="background:${proj.color}"></div><div class="note-card-project" style="color:${proj.color}">${proj.emoji} ${proj.name}</div><div class="note-card-date">${d}/${mo}/${y} · ${b.start}</div></div><div class="note-card-title">${b.title}</div><div class="note-card-text">${b.note}</div></div>`;
+  }).join('');
+}
+function deleteNoteFromJournal(id){const b=blocks.find(x=>x.id===id);if(!b)return;if(confirm('Supprimer la note ?')){b.note='';saveData();renderNotes();}}
+function updateProjectStats(){
+  const ws=getWeekStart(currentWeekOffset);
+  const weekKeys=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return dateKey(d);});
+  const weekBlocks=blocks.filter(b=>weekKeys.includes(b.date));
+  const totalBlocks=weekBlocks.length;
+  const totalHours=weekBlocks.reduce((acc,b)=>{const[sh,sm]=b.start.split(':').map(Number);const[eh,em]=b.end.split(':').map(Number);return acc+(eh*60+em-sh*60-sm)/60;},0);
+  document.getElementById('statsGrid').innerHTML=`<div class="stat-card"><div class="stat-num">${totalBlocks}</div><div class="stat-label">Blocs cette semaine</div></div><div class="stat-card"><div class="stat-num">${totalHours.toFixed(1)}h</div><div class="stat-label">Heures planifiées</div></div>`;
+  document.getElementById('projectStats').innerHTML=PROJECTS.map(proj=>{
+    const projBlocks=blocks.filter(b=>b.project===proj.id);
+    const projHours=projBlocks.reduce((acc,b)=>{const[sh,sm]=b.start.split(':').map(Number);const[eh,em]=b.end.split(':').map(Number);return acc+(eh*60+em-sh*60-sm)/60;},0);
+    return `<div class="project-stat"><div class="project-color-bar" style="background:${proj.color}"></div><div><div class="project-stat-name">${proj.emoji} ${proj.name}</div><div class="project-stat-hours">${projBlocks.length} bloc${projBlocks.length!==1?'s':''} · ${projHours.toFixed(1)}h total</div></div><div class="project-stat-count">${projBlocks.length}</div></div>`;
+  }).join('');
+}
+function switchTab(tab,e){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  if(e)e.currentTarget.classList.add('active');
+  if(tab==='notes')renderNotes();if(tab==='projets')updateProjectStats();
+}
+function updateHeaderDate(){
+  const d=new Date();const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];const months=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  document.getElementById('headerDate').innerHTML=`${days[d.getDay()]}<br>${d.getDate()} ${months[d.getMonth()]}`;
+}
+updateHeaderDate();renderWeek();
+if(blocks.length===0){
+  const today=new Date();const mondayOffset=(today.getDay()+6)%7;
+  const addDefault=(dayOffset,proj,title,start,end)=>{const d=new Date(today);d.setDate(today.getDate()-mondayOffset+dayOffset);blocks.push({id:Date.now()+Math.random(),date:dateKey(d),project:proj,title,start,end,note:'',created:new Date().toISOString()});};
+  [0,1,2,3].forEach(i=>addDefault(i,'travail','Patrick Morin','06:00','15:00'));
+  addDefault(0,'memora','Cold calls + pitchs','18:00','20:00');addDefault(1,'memora','Exécution client','18:00','20:00');
+  addDefault(2,'portrait','Pratique photo','18:00','20:00');addDefault(3,'portrait','Édition photos','18:00','20:00');
+  addDefault(0,'gym','Gym','20:30','22:00');addDefault(2,'gym','Gym','20:30','22:00');addDefault(4,'gym','Gym','10:00','12:00');
+  saveData();renderWeek();
+}
+</script>
+</body>
+</html>
